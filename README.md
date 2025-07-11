@@ -2,4 +2,4 @@
 
 An app that lets you keep track of games rankings and generate tournaments.
 
-Realized by me, @ninagentile, @imran-ml3
+Team: [ninagentile](https://github.com/ninagentile), [imran-ml3](https://github.com/imran-ml3), [GiovanniGiacometti](https://github.com/GiovanniGiacometti)
