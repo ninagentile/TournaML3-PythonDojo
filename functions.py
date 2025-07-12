@@ -13,12 +13,11 @@ def insert_player(username: str) -> None:
     Create a player with the given username
     """
 
-    n_players = Player.objects(username=username)
-
-    if n_players:
+    try:
+        PlayerQueries.get_by_name(username)
         raise ValueError("Username already exists!")
-
-    Player(username=username).save()
+    except DoesNotExist:
+        Player(username=username).save()
 
 
 def insert_game(name: str, difficulty: Difficulty) -> None:
@@ -26,12 +25,11 @@ def insert_game(name: str, difficulty: Difficulty) -> None:
     Create a player with the given username
     """
 
-    n_games = Game.objects(name=name)
-
-    if n_games:
+    try:
+        GameQueries.get_by_name(name=name)
         raise ValueError("Game already exists!")
-
-    Game(name=name, difficulty=difficulty).save()
+    except DoesNotExist:
+        Game(name=name, difficulty=difficulty).save()
 
 
 def insert_match(
@@ -62,7 +60,9 @@ def insert_match(
             raise ValueError(f"The player named {p} does not exist in DB")
 
     # Create Match
-    match = Match(game=game, players=players, winners=winners, date=date).save()
+    match = Match(
+        game=game, players=players, winners=winners, date=date
+    ).save()
 
     return match
 
@@ -115,14 +115,21 @@ def create_ranking(from_date: str | None, to_date: str | None, game_name: str | 
 
     # for each game get the point for each player
     scores_by_username = defaultdict(int)
+    n_played_matches_by_username = defaultdict(int)
+    n_won_matches_by_username = defaultdict(int)
     for match in matches:
+        for player in match.players:
+            player_name = player.name
+            n_played_matches_by_username[player_name] += 1
         for winner in match.winners:
             score = get_score(match.game)
             player_name = winner.name
             scores_by_username[player_name] += score
+            n_won_matches_by_username[player_name] += 1
 
-    # Order scores and return them
-    return dict(sorted(scores_by_username.items(), key=lambda item: -item[1]))
+    # create the ranking
+    df = pl.DataFrame(results).sort("Won", descending=True)
+
 
 
 def create_tournament(players_names: list[str], n_teams: int):
